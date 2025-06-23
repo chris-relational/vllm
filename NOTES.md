@@ -9,7 +9,7 @@ The command `ENV LD_PRELOAD="/usr/lib/aarch64-linux-gnu/libtcmalloc_minimal.so.4
 sets the container environment variable LD_PRELOAD to the reference shared library 
 (note this is an Ubuntu image created on an arm64 host).  
 
-(ChatGPT): LD_PRELOAD instructs the dynamic linker to load a shared library before any other library when running executables.  
+__(ChatGPT):__ LD_PRELOAD instructs the dynamic linker to load a shared library before any other library when running executables.  
 It allows you to override functions in system libraries or inject extra functionality without changing the application binary.  
 
 `tcmalloc_minimal` is the minimal version of Google’s TCMalloc library (Thread-Caching Malloc), 
@@ -31,7 +31,8 @@ Here we use the command `$ docker build -f docker/Dockerfile.cpu --tag vllm-open
 
 
 # Additional installation requirements
-1. For the chat REPL of `transformers` you need to `pip install accelerate`. 
+1. For the chat REPL of `transformers` you need to `pip install accelerate`. This is a framework for distributing inference to
+multiple nodes
 
 2. To run the `generate` SDK it is recommended to `pip install bitsandbytes` (by Huggingface).  
    `bitsandbytes` has methods for quantizing (when loading to memory) LLMs that greately improves performance.  
