@@ -1,19 +1,16 @@
 # Enable the use of classname in classmethods
 from __future__ import annotations
+from contextlib import redirect_stdout
+from functools import cache
+import io
 import os
+import re
+from typing import Optional, List
 
-from typing import Optional
 from pydantic import BaseModel, SkipValidation, Field
 from pydantic_settings import BaseSettings
-
-from functools import cache
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
-
-# Refrain from calling these inside the notebook if cache is not available. 
-# Takes too long. Use the console instead
-from contextlib import redirect_stdout
-import io
 
 
 class Settings(BaseSettings, extra="ignore"):
@@ -46,7 +43,7 @@ class ModelConfig(BaseModel):
                 model_id=model_id,
                 tokenizer=AutoTokenizer.from_pretrained(
                     pretrained_model_name_or_path=model_id, 
-                    # NEVER forget this for causal models (if batched)
+                    # NEVER forget this for causal models (only if batched, otherwise makes no dofference)
                     padding_side="left"
                 ),
                 model=AutoModelForCausalLM.from_pretrained(pretrained_model_name_or_path=model_id)
@@ -67,3 +64,30 @@ class ModelConfig(BaseModel):
             token_ids, 
             skip_special_tokens=True, clean_up_tokenization_spaces=False
         )
+    
+
+# The default pattern used below splits sentences.
+# We do not use capturing parentheses so that split characters are excluded from the result
+# https://docs.python.org/3.12/library/re.html#re.split
+
+# To test if a split pattern works, compare with the original strin using capturing parentheses, e.g.
+# SYSTEM_PROMPT == ''.join(re.split(f"({splitpat})", SYSTEM_PROMPT))
+
+def pattern_split(
+    text: str, 
+    patternlist: List[re.Pattern]=[re.compile(r"(?<=[.:;!?])\s+")],
+    joinstr: str=os.linesep
+) -> str:
+    ''' Split a (long) string into multiple lines 
+        (or do sth more general using multiple split patterns and 
+        join string).
+        I use this below to split LLM outputs into short lines.
+    '''
+    inputs, outputs = [text], []
+    for pat in patternlist:
+        _ = [outputs.extend(pat.split(s)) for s in inputs]
+        inputs, outputs = outputs, []
+    return joinstr.join(inputs)
+
+# Testing
+# print(pattern_split(text="One. Two; and three"))
