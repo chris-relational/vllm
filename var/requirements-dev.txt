@@ -46,13 +46,16 @@ interegular==0.3.3
 ipykernel==6.29.5
 ipython==9.3.0
 ipython_pygments_lexers==1.1.1
+ipywidgets==8.1.7
 jedi==0.19.2
 Jinja2==3.1.6
 jiter==0.10.0
 jsonschema==4.24.0
 jsonschema-specifications==2025.4.1
+jupyter-console==6.6.3
 jupyter_client==8.6.3
 jupyter_core==5.8.1
+jupyterlab_widgets==3.0.15
 lark==1.2.2
 llguidance==0.7.29
 llvmlite==0.44.0
@@ -137,9 +140,10 @@ tzdata==2025.2
 urllib3==2.5.0
 uvicorn==0.34.3
 uvloop==0.21.0
--e git+ssh://git@chris-relational-github/chris-relational/vllm.git@5991e7e65d4638ff9c6a32f9329c6d3c0feaa240#egg=vllm
+-e git+ssh://git@chris-relational-github/chris-relational/vllm.git@ee0cf7d121586a6d0ed76d34e7c5fe8fb7ec0136#egg=vllm
 watchfiles==1.1.0
 wcwidth==0.2.13
 websockets==15.0.1
+widgetsnbextension==4.0.14
 xxhash==3.5.0
 yarl==1.20.1

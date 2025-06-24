@@ -9,20 +9,22 @@ from typing import Optional, List
 
 from pydantic import BaseModel, SkipValidation, Field
 from pydantic_settings import BaseSettings
+# Only used for the generate_ids argument type-hint
+from torch import Tensor
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
 
 
 class Settings(BaseSettings, extra="ignore"):
     hf_readonly_token:Optional[str]=Field(alias="HF_READONLY_TOKEN", default=None)
-    hf_finegrained_token: Optional[str]=Field(alias="HF_FINEGRAINDED_TOKEN", default=None)
+    hf_finegrained_token: Optional[str]=Field(alias="HF_FINEGRAINED_TOKEN", default=None)
     openai_api_key: str=Field(alias="OPENAI_API_KEY", default="christos")
 
     # The decoration order counts. Eventually it must be a classmethod
     @classmethod
     @cache
-    def make(env_path: str=".env") -> Settings:        
-        return Settings(_env_file=(env_path if not os.isfile(env_path) else None))
+    def make(cls: Settings, env_path: str=".env") -> Settings:        
+        return Settings(_env_file=(env_path if not os.path.isfile(env_path) else None))
 
 
 class ModelConfig(BaseModel):
@@ -39,7 +41,7 @@ class ModelConfig(BaseModel):
     def from_pretrained(cls, model_id: str):
         # Dump ModelConfig ctor logging to /dev/null
         with redirect_stdout(io.StringIO()):
-            return ModelConfig(            
+            return ModelConfig(
                 model_id=model_id,
                 tokenizer=AutoTokenizer.from_pretrained(
                     pretrained_model_name_or_path=model_id, 
@@ -49,20 +51,22 @@ class ModelConfig(BaseModel):
                 model=AutoModelForCausalLM.from_pretrained(pretrained_model_name_or_path=model_id)
             )
     
-    def generate(self, query: str, max_new_tokens=512, temperature=.7, top_p=.9) -> str:
-        inputs = self.tokenizer(query, return_tensors="pt")
+    # Normally you pass the input_ids and attention_mask keys in the transformers.tokenization_utils_base.BatchEncoding
+    # dictionary returned by PreTrainedTokenizerFast.__call__
+    def generate(self, max_new_tokens=512, temperature=.7, top_p=.9, **kwargs) -> str:
         token_ids = self.model.generate(
-            **inputs, 
             # Check https://huggingface.co/docs/transformers/llm_tutorial
             do_sample=True, 
             max_new_tokens=max_new_tokens, 
             temperature=temperature, 
             top_p=top_p,
-            num_beams=4
+            num_beams=4,
+            **kwargs
         )
         return self.tokenizer.batch_decode(
             token_ids, 
-            skip_special_tokens=True, clean_up_tokenization_spaces=False
+            skip_special_tokens=True, 
+            clean_up_tokenization_spaces=False
         )
     
 
