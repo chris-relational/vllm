@@ -1,4 +1,9 @@
-from pydantic import BaseModel, SkipValidation
+# Enable the use of classname in classmethods
+from __future__ import annotations
+import os
+
+from typing import Optional
+from pydantic import BaseModel, SkipValidation, Field
 from pydantic_settings import BaseSettings
 
 from functools import cache
@@ -11,15 +16,16 @@ from contextlib import redirect_stdout
 import io
 
 
-class Settings(BaseSettings):
-    hf_finegrained_token: str
-    hf_readonly_token: str
+class Settings(BaseSettings, extra="ignore"):
+    hf_readonly_token:Optional[str]=Field(alias="HF_READONLY_TOKEN", default=None)
+    hf_finegrained_token: Optional[str]=Field(alias="HF_FINEGRAINDED_TOKEN", default=None)
+    openai_api_key: str=Field(alias="OPENAI_API_KEY", default="christos")
 
     # The decoration order counts. Eventually it must be a classmethod
     @classmethod
     @cache
-    def make(env_path: str=".env") -> Settings:
-        return Settings()
+    def make(env_path: str=".env") -> Settings:        
+        return Settings(_env_file=(env_path if not os.isfile(env_path) else None))
 
 
 class ModelConfig(BaseModel):
@@ -40,7 +46,7 @@ class ModelConfig(BaseModel):
                 model_id=model_id,
                 tokenizer=AutoTokenizer.from_pretrained(
                     pretrained_model_name_or_path=model_id, 
-                    # NEVER forget this for causal models
+                    # NEVER forget this for causal models (if batched)
                     padding_side="left"
                 ),
                 model=AutoModelForCausalLM.from_pretrained(pretrained_model_name_or_path=model_id)
