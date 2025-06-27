@@ -23,7 +23,7 @@ class Settings(BaseSettings, extra="ignore"):
     # The decoration order counts. Eventually it must be a classmethod
     @classmethod
     @cache
-    def make(cls: Settings, env_path: str=".env") -> Settings:        
+    def make(cls: Settings, env_path: str=".env") -> Settings:
         return Settings(_env_file=(env_path if not os.path.isfile(env_path) else None))
 
 
@@ -45,22 +45,22 @@ class ModelConfig(BaseModel):
                 model_id=model_id,
                 tokenizer=AutoTokenizer.from_pretrained(
                     pretrained_model_name_or_path=model_id, 
-                    # NEVER forget this for causal models (only if batched, otherwise makes no dofference)
+                    # Don't forget this for causal models (only if batched, otherwise makes no difference)
                     padding_side="left"
                 ),
                 model=AutoModelForCausalLM.from_pretrained(pretrained_model_name_or_path=model_id)
             )
     
-    # Normally you pass the input_ids and attention_mask keys in the transformers.tokenization_utils_base.BatchEncoding
+    # Normally we pass the input_ids and attention_mask keys in the transformers.tokenization_utils_base.BatchEncoding
     # dictionary returned by PreTrainedTokenizerFast.__call__
     def generate(self, max_new_tokens=512, temperature=.7, top_p=.9, **kwargs) -> str:
         token_ids = self.model.generate(
             # Check https://huggingface.co/docs/transformers/llm_tutorial
             do_sample=True, 
+            num_beams=4,
             max_new_tokens=max_new_tokens, 
             temperature=temperature, 
             top_p=top_p,
-            num_beams=4,
             **kwargs
         )
         return self.tokenizer.batch_decode(
