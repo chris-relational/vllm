@@ -74,6 +74,7 @@ docker run --rm -it \
    vllm-cpu-env
 ```
 
+## `2025-06-29`
 The image does not run on M3 Mac. The following command fails to start the service and errs with error:  
 
 ```
