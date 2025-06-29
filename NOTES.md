@@ -1,7 +1,7 @@
 # TL; DR
 I log here my reading conprehension notes and tasks regarding the repository.  
-The `var` directory is contained in `.gitignore` so it does not mix with the repo code.
-
+I add things not ment to get uploaded to the repo in `var` directory.  
+This is contained in `.gitignore` so it does not mix with the repo code.
 
 
 # `docker/Dockerfile.arm`
@@ -36,7 +36,4 @@ multiple nodes
 
 2. To run the `generate` SDK it is recommended to `pip install bitsandbytes` (by Huggingface).  
    `bitsandbytes` has methods for quantizing (when loading to memory) LLMs that greately improves performance.  
-
-
-
 
