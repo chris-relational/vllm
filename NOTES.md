@@ -59,22 +59,46 @@ $ docker build -f docker/Dockerfile.cpu --tag vllm-cpu-env .
    than the default system allocator (glibc malloc). Helps improve performance of memory-intensive apps.
 
 
+The following command builds vllm-cpu-env on M3 Mac.
 ```bash
 # Launching OpenAI server 
-docker run --rm -it \
-   --privileged=true \
+docker run --rm -it \   
+   -p 8000:8000 \
+   -v $HOME/.cache/huggingface:/huggingface \
+   -e HF_HOME=/huggingface \
+   -e VLLM_CPU_KVCACHE_SPACE=4 \
+   -e VLLM_CPU_OMP_THREADS_BIND=0-4 \
+   -e MAX_MODEL_LENGTH=8192 \
+   -e VLLM_LOGLEVEL=DEBUG \
+   --entrypoint /bin/bash \
+   vllm-cpu-env
+```
+
+The image does not run on M3 Mac. The following command fails to start the service and errs with error:  
+
+```
+libnuma: Warning: node argument -1 is out of range
+get_mempolicy: Operation not permitted
+```
+
+__COMMAND__
+```
+docker run -it --rm \
+   --memory=10g \
    --shm-size=4g \
    -p 8000:8000 \
    -v $HOME/.cache/huggingface:/huggingface \
    -e HF_HOME=/huggingface \
    -e VLLM_CPU_KVCACHE_SPACE=10 \
    -e VLLM_CPU_OMP_THREADS_BIND=0-4 \
-   -e LD_PRELOAD="/usr/lib/aarch64-linux-gnu/libtcmalloc_minimal.so.4" \
+   -e VLLM_LOG_LEVEL=DEBUG \
    --entrypoint bash \
    vllm-cpu-env \
    --model=meta-llama/Llama-3.2-1B-Instruct \
-   --dtype=bfloat16
+   --dtype=float32 \
+   --max-model-len=8192
 ```
+
 
 ## Container `run` Comments
 The environment variables used are explained in the same documentation page [right after the build command]
