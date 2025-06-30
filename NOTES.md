@@ -21,7 +21,7 @@ the `huggingface.inference-client` library.
 The folder also contains `util.py` with common code for inference using `transformers`.  
 
 
-# Building vLLM from sources on Apple Silicon (arm64+MacOS)
+# Building `vLLM` from sources on Apple Silicon (arm64+MacOS)
 Follow the instruction [here](https://docs.vllm.ai/en/stable/getting_started/installation/cpu.html).  
 Everything works without issues.  I have tested the host-installation with several models from HF.  
 
@@ -37,12 +37,13 @@ This model does not work (not only on vLLM; `transformers`-based direct inferenc
 
 # Building `vLLM` inside a docker container for ARM architecture (`docker/Dockerfile.arm`)
 
-[The documentation]() provides the exact build commands for linux@x86. For Apple Silicon we must modify the build process a bit:
+[The documentation](https://docs.vllm.ai/en/stable/getting_started/installation/cpu.html#build-image-from-source) 
+provides the exact build commands for linux@x86. For Apple Silicon we must modify the build process a bit:
 ```shell
 $ docker build -f docker/Dockerfile.cpu --tag vllm-cpu-env .
 ```
 
-## Container `build` Comments
+## Comments
 1. The dockerfile is `docker/Dockerfile.arm`.   
 
 2. `--target vllm-openai` is particular to `Dockerfile.cpu` (it is a multitarget build and the `vllm-openai` target is only built).   
@@ -58,8 +59,7 @@ $ docker build -f docker/Dockerfile.cpu --tag vllm-cpu-env .
    an optimized memory allocator from the "Google Performance Tools suite". It provides faster malloc/free 
    than the default system allocator (glibc malloc). Helps improve performance of memory-intensive apps.
 
-
-The following command builds vllm-cpu-env on M3 Mac.
+# Running the vLLM OpenAI API web server from the container
 ```bash
 # Launching OpenAI server 
 docker run --rm -it \   
@@ -74,42 +74,23 @@ docker run --rm -it \
    vllm-cpu-env
 ```
 
-## `2025-06-29`
+## Comments `2025-06-29`
 The image does not run on M3 Mac. The following command fails to start the service and errs with error:  
-
 ```
 libnuma: Warning: node argument -1 is out of range
 get_mempolicy: Operation not permitted
 ```
-
-__COMMAND__
-```
-docker run -it --rm \
-   --memory=10g \
-   --shm-size=4g \
-   -p 8000:8000 \
-   -v $HOME/.cache/huggingface:/huggingface \
-   -e HF_HOME=/huggingface \
-   -e VLLM_CPU_KVCACHE_SPACE=10 \
-   -e VLLM_CPU_OMP_THREADS_BIND=0-4 \
-   -e VLLM_LOG_LEVEL=DEBUG \
-   --entrypoint bash \
-   vllm-cpu-env \
-   --model=meta-llama/Llama-3.2-1B-Instruct \
-   --dtype=float32 \
-   --max-model-len=8192
-```
-
 
 ## Container `run` Comments
 The environment variables used are explained in the same documentation page [right after the build command]
 (https://docs.vllm.ai/en/stable/getting_started/installation/cpu.html?h=#related-runtime-environment-variables).
 
 
-# Additional installation requirements
+
+# Huggingface `transformers` 
 1. For the chat REPL of `transformers` you need to `pip install accelerate`. This is a framework for distributing inference to
 multiple nodes
 
-2. To run the `generate` SDK it is recommended to `pip install bitsandbytes` (by Huggingface).  
+2. To run the `transformers.generate` API it is recommended to `pip install bitsandbytes` (by Huggingface).  
    `bitsandbytes` has methods for quantizing (when loading to memory) LLMs that greately improves performance.  
 
