@@ -1,19 +1,22 @@
 # TL; DR
-I log here reading conprehension notes for the repository. These may also include nuances
-not directly related to the task at hand but are required to accomplish it. For example, 
-if a particular CPP-compilation or linking flag is required for build, I may add a note regarding the
-flag in a general context.  
-
-The `var` directory is used for files not meant to be uploaded to the repo.  
-`var` is contained in `.gitignore` so it does not tamper with the repo code.  
+I log here reading conprehension notes from the repository. They may include nuances not directly related to the task at hand. 
+For example, if a particular cpp-compilation or linking flag is required for build, I may add a note regarding the
+general use of the flag.  
 
 
-# New Folders and Files
+
+# Repository File and Folder Additions
 I create new folders and files containing additions I do while studying the repo.  
-Ensure these folders and files do not meix with main and there are no local files or folders with
+Ensure these folders and files do not mess with main and there are no local files or folders with
 the same names (e.g. created while in the main branch).
 
-## `notebooks` folder
+
+## `var` directory
+It is used for files not meant to be uploaded to the repo.  
+`var` is contained in `.gitignore` of the main branch so it does not mess with repo code.  
+
+
+## `notebooks` directory
 It contains notebooks with inference code using HF LLMs, one notebook per LLM. Each such notebook contains vLLM client code, OpenAI REST API or HF transformers direct inference code.  
 There's also a `huggingface-hub.ipyb` notebook with test code for the `huggingface-hub` library. This includes
 the `huggingface.inference-client` library.  
@@ -22,16 +25,24 @@ The folder also contains `util.py` with common code for inference using `transfo
 
 
 
-<!-- V L L M  B u i l d  o n  A R M 6 4  H o s t -->
-# Building `vLLM` from sources on Apple Silicon (arm64+MacOS)
-Follow the instruction [here](https://docs.vllm.ai/en/stable/getting_started/installation/cpu.html).  
-Everything works without issues.  I have tested the host-installation with several models from HF.  
+<!-- 
+v L L M  B u i l d  a n d  D e p l o y m e n t  T e s t s 
+. . . .  . . . . .  . . .  . . . . . . . . . .  . . . . .
+-->
+# vLLM Build and Deployment Tests
 
-__Models:__  
-1. meta-llama/Llama-3.2-1B   
-2. meta-llama/Llama-3.2-1B-Instruct  
-3. mistralai/mistral-7B-Instruct-v0.1  
-4. mistralai/Magistral-Small-2506  
+
+<!-- V L L M  S o u r c e  B u i l d  o n  A R M 6 4 -->
+## `vLLM` Source Build on MacOS/arm64 (M3)
+__SUCCESS__  
+We followed the instructions [in the vLLM web site](https://docs.vllm.ai/en/stable/getting_started/installation/cpu.html).  
+We tested the host-installation with the following models from HF:  
+
+1. `meta-llama/Llama-3.2-1B`   
+2. `meta-llama/Llama-3.2-1B-Instruct`  
+3. `mistralai/mistral-7B-Instruct-v0.1`  
+
+4. `mistralai/Magistral-Small-2506`  
    <span style="color: red;">
    __CAVEAT!__ This model does not work (not only on vLLM; `transformers`-based  
    direct inference does not work as well)
@@ -39,12 +50,14 @@ __Models:__
 
 
 
-<!-- B u i l d i n g  v L L M  f r o m   s o u r c e s  o n   L i n u x  x 8 6 -->
-# Building `vLLM` from sources on Linux x86
+<!-- V L L M  S o u r c e  B u i l d  o n  L i n u x  x 8 6 -->
+# `vLLM` Source Build on Linux/amd64 (i9)
+__FAILURE__
 <span style="color: red;">
 Probably vLLM cannot be built on x86 Linux with CPU only. Eventually, it asks for CUDA features 
-(see iten5 below)
-</span>
+(see iten5 below).  
+We filed a [ticket at the vLLM repo](https://github.com/vllm-project/vllm/issues/20326).  
+</span>  
 
 1. Install gcc AND g++ (they're separate installations)
 2. VLLM_TARGET_DEVICE=cpu (use everywhere, doesn't harm)
@@ -88,30 +101,22 @@ Probably vLLM cannot be built on x86 Linux with CPU only. Eventually, it asks fo
 
 
 <!-- V L L M  B u i l d  o n  A R M 6 4  D o c k e r -->
-# Building `vLLM` inside a docker container for ARM architecture (`docker/Dockerfile.arm`)
+# `vLLM` container build and run for ARM architecture (`docker/Dockerfile.arm`)
 
+## Build
+__SUCCESS__
 [The documentation](https://docs.vllm.ai/en/stable/getting_started/installation/cpu.html#build-image-from-source) 
 provides the exact build commands for linux@x86. For Apple Silicon we must modify the build process a bit:
 ```shell
-tag=cpu branch=playgound 
-$ docker build -f docker/Dockerfile.cpu --tag vllm-cpu-env .
-
-
-tag="arm" platform="linux/arm64/v8" \
-target="cpu" repo=vllm branch=main \
+tag=cpu branch=playgound platform=arm64 \
 bash -c '
-docker build\
-    --platform ${platform} \
-    --build-arg BASE_NAME=${target} \
-    --build-arg VLLM_TARGET_DEVICE=${target} \
-    -f docker/Dockerfile.cpu \
-    -t ${repo}-${branch}:${target}-${tag} \
-    --target vllm-openai \
-    --shm-size=8g .
+   docker build \
+   -f docker/Dockerfile.cpu \
+   -t vllm-${branch}:${tag}-${platform} .
 '
 ```
 
-## Comments
+### Comments
 1. The dockerfile is `docker/Dockerfile.arm`.   
 
 2. `--target vllm-openai` is particular to `Dockerfile.cpu` (it is a multitarget build and the `vllm-openai` target is only built).   
@@ -128,12 +133,16 @@ docker build\
    than the default system allocator (glibc malloc). Helps improve performance of memory-intensive apps.
 
 
+## Run
+__FAILURE__
 
-<!-- R u n n i n g  t h e  w e b - s e r v e r  f r o m  t h e  c o n t a i n e r  o n  A R M -->
-# Running the vLLM OpenAI API web server from the container
+The environment variables used are explained in the same documentation page [right after the build command]
+(https://docs.vllm.ai/en/stable/getting_started/installation/cpu.html?h=#related-runtime-environment-variables).
+
 ```bash
-# Launching OpenAI server 
-docker run --rm -it \   
+tag=cpu branch=playgound platform=arm64 \
+bash -c '
+   docker run --rm -it \   
    -p 8000:8000 \
    -v $HOME/.cache/huggingface:/huggingface \
    -e HF_HOME=/huggingface \
@@ -142,26 +151,14 @@ docker run --rm -it \
    -e MAX_MODEL_LENGTH=8192 \
    -e VLLM_LOGLEVEL=DEBUG \
    --entrypoint /bin/bash \
-   vllm-cpu-env
+   vllm-${branch}:${tag}-${platform}
+'
 ```
 
-## Comments `2025-06-29`
+### Comments
 The image does not run on M3 Mac. The following command fails to start the service and errs with error:  
 ```
 libnuma: Warning: node argument -1 is out of range
 get_mempolicy: Operation not permitted
 ```
-
-## Container `run` Comments
-The environment variables used are explained in the same documentation page [right after the build command]
-(https://docs.vllm.ai/en/stable/getting_started/installation/cpu.html?h=#related-runtime-environment-variables).
-
-
-
-# Huggingface `transformers` 
-1. For the chat REPL of `transformers` you need to `pip install accelerate`. This is a framework for distributing inference to
-multiple nodes
-
-2. To run the `transformers.generate` API it is recommended to `pip install bitsandbytes` (by Huggingface).  
-   `bitsandbytes` has methods for quantizing (when loading to memory) LLMs that greately improves performance.  
 
