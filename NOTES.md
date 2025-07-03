@@ -31,6 +31,23 @@ v L L M  B u i l d  a n d  D e p l o y m e n t  T e s t s
 -->
 # vLLM Build and Deployment Tests
 
+All the tests below are conducted on the following LLMs (downloaded from Huggingface):
+
+| Model                                  | Test                 | References-Comments                                                                                                |
+|----------------------------------------|----------------------|--------------------------------------------------------------------------------------------------------------------|
+| mistralai/Magistral-Small-2506         | vLLM on host         | **Failure**  <br> Followed this playbook from the HF model card in a dedicated testing environment                 |
+|                                        |                      | (`~/projects/local/playground/magistral-vllm`).  <br> Failed to run the vLLM server.                               |
+| mistralai/Mistral-7B-Instruct-v0.1     | vLLM on host         | **Success**  <br> Ran `vllm serve mistralai/Mistral-7B-Instruct-v0.1`                                              |
+|                                        |                      | in `~/projects/local/playground/magistral-vllm` and sent a POST using the CURL command in the model card.          |
+| mistralai/Mistral-7B-Instruct-v0.1     | Transformers         | **Success**  <br> The model card on HF implies that the model doesn't have an AutoTokenizer-compatible             |
+|                                        |                      | tokenizer and we have to use the `mistral_common` Pylib for tokenization, with `AutoModelForCausalLM`              |
+|                                        |                      | for inference.  <br> This is not true. The `README.md` in the `snapshots` folder of the model contains             |
+|                                        |                      | an example with `AutoTokenizer`.  <br> The inference is in `~/projects/remotes/public/vllm/var/mistralai.ipynb`.   |
+| meta-llama/Llama-3.2-3B-Instruct       | vLLM on host         | **Success**  <br> NOTE: must set `--max-model-len` to a small value e.g. `4096`.                                   |
+| meta-llama/Llama-3.2-3B-Instruct       | Transformers on host | *(No comments provided)*                                                                                           |
+| meta-llama/Llama-3.2-1B-Instruct       | vLLM on host         | **SUCCESS**                                                                                                        |
+
+
 
 <!-- V L L M  S o u r c e  B u i l d  o n  A R M 6 4 -->
 ## `vLLM` Source Build on MacOS/arm64 (M3)
